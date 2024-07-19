@@ -66,7 +66,7 @@ int main() {
 		printf("ERROR reading from socket");
 		return 1;
 	}
-	printf("Message: %s", buffer);
+	// printf("Message: %s", buffer);
 
 	char *response = "+PONG\r\n";
 	n = write(accept_fd, response, sizeof(&response));
