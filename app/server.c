@@ -105,6 +105,7 @@ int main()
 		int session_fd = accept(server_fd, (struct sockaddr *)&client_addr, &client_addr_len);
 		thrd_t t;
 		thrd_create(&t, run_session, &session_fd);
+		thrd_detach(t);
 	}
 
 	close(server_fd);
