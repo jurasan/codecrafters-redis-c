@@ -53,23 +53,22 @@ int main() {
 	printf("Waiting for a client to connect...\n");
 	client_addr_len = sizeof(client_addr);
 	
-	int accept_fd = accept(server_fd, (struct sockaddr *) &client_addr, &client_addr_len);
-	if (server_fd < 0) {
+	int session_fd = accept(server_fd, (struct sockaddr *) &client_addr, &client_addr_len);
+	if (session_fd < 0) {
 		printf("ERROR on accept");
 		return 1;
 	}
 	printf("Client connected\n");
 
 	char buffer[255];
-	int n = read(accept_fd, buffer, 255);
+	int n = read(session_fd, buffer, 255);
 	if (n < 0) {
 		printf("ERROR reading from socket");
 		return 1;
 	}
-	// printf("Message: %s", buffer);
 
 	char *response = "+PONG\r\n";
-	n = write(accept_fd, response, sizeof(&response));
+	n = write(session_fd, response, strlen(response));
 	if (n < 0) {
 		printf("ERROR writing to socket");
 		return 1;
