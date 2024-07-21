@@ -6,6 +6,47 @@
 #include <string.h>
 #include <errno.h>
 #include <unistd.h>
+#include <stdbool.h>
+#include <threads.h>
+
+int run_session(void *p_session_fd)
+{
+	int session_fd = *((int *)p_session_fd);
+	if (session_fd < 0)
+	{
+		printf("ERROR on accept");
+		return 1;
+	}
+	printf("Client connected\n");
+
+	char buffer[255];
+	while (true)
+	{
+		int n = read(session_fd, buffer, 255);
+		printf("n=%d\n", n);
+		if (n < 0)
+		{
+			printf("ERROR reading from socket");
+			return 1;
+		}
+		if (n < 1)
+		{
+			break;
+		}
+
+		buffer[n] = '\0';
+		printf("receied message: '%s', length: %u\n", buffer, n);
+
+		char *response = "+PONG\r\n";
+		n = write(session_fd, response, strlen(response));
+		if (n < 0)
+		{
+			printf("ERROR writing to socket");
+			return 1;
+		}
+	}
+	return 0;
+}
 
 int main()
 {
@@ -59,32 +100,11 @@ int main()
 	printf("Waiting for a client to connect...\n");
 	client_addr_len = sizeof(client_addr);
 
-	int session_fd = accept(server_fd, (struct sockaddr *)&client_addr, &client_addr_len);
-	if (session_fd < 0)
+	while (true)
 	{
-		printf("ERROR on accept");
-		return 1;
-	}
-	printf("Client connected\n");
-
-	char buffer[255];
-	for (int i = 0; i < 3; i++)
-	{
-		int n = read(session_fd, buffer, 255);
-		if (n < 0)
-		{
-			printf("ERROR reading from socket");
-			return 1;
-		}
-		printf("%s", buffer);
-
-		char *response = "+PONG\r\n";
-		n = write(session_fd, response, strlen(response));
-		if (n < 0)
-		{
-			printf("ERROR writing to socket");
-			return 1;
-		}
+		int session_fd = accept(server_fd, (struct sockaddr *)&client_addr, &client_addr_len);
+		thrd_t t;
+		thrd_create(&t, run_session, &session_fd);
 	}
 
 	close(server_fd);
